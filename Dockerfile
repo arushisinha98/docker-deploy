@@ -1,7 +1,5 @@
-ARG GIT_ACCESS_TOKEN
-
 # GitHub
-RUN git config --global url."https://${GIT_ACCESS_TOKEN}@github.com".insteadOf "ssh://git@github.com"
+RUN git config --global url."https://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:@github.com/".insteadOf "https://github.com/"
 
 FROM python:3.6-slim
 WORKDIR /app
