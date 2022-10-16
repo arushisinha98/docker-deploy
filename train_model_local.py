@@ -46,7 +46,7 @@ popular_book_per_genre = np.empty([1, g], dtype = "S64")
 
 for ig, g in enumerate(unique_genre):
   this_genre = df_ebooks.loc[(df['Genre'] == unique_genre(ig))]
-  popular_book_per_genre = this_genre['Title'].mode()
+  popular_book_per_genre(0, ig) = this_genre['Title'].mode()
   for ip, p in enumerate(unique_patron):
     patron_hist = df_ebooks.loc[(df['Patron'] == unique_patron(ip))]
     pg_mat(ip, ig) = count(patron_hist['Genre'] == unique_genre(ig)) # dot product with rating?
@@ -57,8 +57,13 @@ pg_df = pd.DataFrame(pg_mat)
 knn.fit(pg_df.values)
 distances, indices = knn.kneighbors(df.values, n_neighbors = 5)
 
+# recommend most popular book in favorite genre
+
 # use nearest neighbor genre if most popular book in favorite genre has already been read
 
+# use most popular book in most populat genre if no reading history
+
+# randomized wildcards = recommendation of a highly rated book, regardless of genre
 
 """
 Store the model file generated after training as a pickle file
