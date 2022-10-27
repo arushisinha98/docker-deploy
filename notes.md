@@ -1,0 +1,186 @@
+## Notes from Udemy / learn.gov.sg: Docker Crash Course for busy DevOps and Developers
+Docker = container-based virtualization
+- container engine allows us to run multiple guest instances
+- containers share the host's OS
+- applications run in different containers (runtime isolation)
+- containers are self-sufficient application bundles
+
+Docker uses client-server architecture
+- docker client is the primary UI
+  - command line client ($)
+- docker daemon / engine / server
+- docker client + daemon run on the same host
+
+Docker for Windows
+#### $ docker info
+(check that it is running on local Linux)
+
+Images = read-only template used to create containers
+- created with docker build command
+- composed of layers w/ other images
+- stored in docker registry (e.g. DockerHub)
+
+Container = instance of a class, if image is a class
+- runtime object
+- portable encapsulations of an environment in which to run apps
+- created from images
+- contains all the binaries / dependencies needd to run app
+
+Registry = where images are stored
+- public or own
+- images stored in repositories within a registry
+
+Repository = collection of different docker images w/ same name, different tags
+- each tag usually represents different version of the image
+
+use official images from hub.docker.com -- clear documentation
+
+All changes made into the running containers are written into the writable layer
+When a container is deleted, writable layer is also deleted but underlying image remains unchanged
+Multiple layers can share access to the same underlying image
+
+##### Task 1: Create a container from an image on DockerHub
+- search for busybox from hub.docker.com (tag: 1.24)
+- open command prompt
+#### $ docker images
+#### $ docker run busybox:1.24 echo "hello world"
+- docker run command will create the container using the image specified then will spin up the container and run it
+
+##### Task 2: Github pull and push
+#### $ docker run --name repo alpine/git clone https://github.com/docker/getting-started.git
+#### $ docker cp repo:/git/getting-started/ .
+#### $ cd getting-started
+#### $ docker build -t docker101tutorial .
+#### $ docker run -dp 80:80 --name docker-tutorial docker101tutorial
+#### $ docker tag docker101tutorial arushisinha98/docker101tutorial
+#### $ docker push arushisinha98/docker101tutorial
+
+##### Task 3: Editing in container runtime
+#### $ docker run busybox:1.24 ls /
+#### $ docker run -it busybox:1.24
+#### $ # ls
+#### $ # touch a.txt
+#### $ # exit
+- created a file a.txt then exited container
+
+##### Task 4: Display container information
+#### $ docker ps
+- displays container information
+#### $ docker ps -a
+- displays all containers including previous runs
+#### $ docker run --rm busybox:1.24 sleep 1
+- removes container as soon as it runs for 1 second
+#### $ docker run --name hello_world busybox:1.24
+- specifies container name as hello_world
+#### $ docker inspect hello_world
+
+#### $ docker pull python
+#### $ docker run -it -p 8888:8080 tomcat:8.0
+- view https://localhost:8888
+#### $ docker ps -a
+#### $ docker run -it -dp 8888:8080 tomcat:8.0
+#### $ docker run -itdp 8888:8080 --name hello_world tomcat:8.0
+#### $ docker logs [IMAGE_ID]
+
+#### $ docker history busybox:1.24
+
+##### Task 5: Commit changes in a container
+- spin up a container from a base image
+- install git package in container
+- commit changes in container
+#### $ docker run -it debian:jessie
+#### $ # ls
+#### $ # git
+#### $ # apt-get update && apt-get install -y git
+#### $ # git
+#### $ # exit
+#### $ docker ps -a
+#### $ docker commit [IMAGE_ID] arushisinha98/debian:1.00
+#### $ docker images
+#### $ docker run -it arushisinha98/debian:1.00
+#### $ # ls
+#### $ # git
+
+##### Task 6: Write a Dockerfule to build a docker image
+- dockerfile = a .txt document that contains all the instructions users provide to assemble an image
+- each instruction will create a new image layer to the image
+- instructions specity what to do when building the image
+
+#### $ wsl touch Dockerfile
+#### $ wsl vi Dockerfile
+
+#### FROM debian:jessie
+#### RUN apt-get update
+#### RUN apt-get install -y git
+#### RUN apt-get install -y vim
+
+#### $ docker build -r arushisinha98/debian .
+- docker build command takes the path to the build context as an argument
+- when build starts, docker client packs all files into tarball then transfers tarball to the daemon
+- "." used to denote current directory
+- docker creates a new container for each instruction
+- containers are ephemeral and are only used to create images
+- containers are read-only
+
+Dockerfile syntax and best practices
+- reach RUN command will execute the command on the top writable layer of the container then commit container as new image
+- each new image is used for the next step in Dockerfile
+- so each RUN instruction will create a new image layer
+- recommend to chain the RUN instructions in Dockerfile to reduce the number of image layers created
+- sort multi-line arguments alphanumerically to avoid duplication and easy update
+- CMD instructions specify which command to run when container starts up
+- COPY instuction copies new files or directories from build context and adds tehm to the file system of the container
+- ADD instruction can not only copy files but also download files from teh internet
+- ADD can automatically unpack compressed files
+
+#### # wsl vi Dockerfile
+
+#### FROM debian:jessie
+#### RUN apt-get update && apt-get install -y \
+#### git \
+#### python \
+#### vim \
+#### COPY abc.txt /src/abc.txt
+#### CMD ["echo", "hello world"]
+
+#### $ docker build -t arushisinha98/debian .
+#### $ docker run -it [IMAGE_ID]
+#### $ # ls
+#### $ # cd src
+#### $ src# ls
+#### $ docker run [IMAGE_ID] echo "hello docker"
+- overwrites CMD instruction
+
+- each time docker executes an instruction, it builds a new image layer
+- if instruction unchanged, it uses docker cache to expedite
+
+#### $ docker build -t arushisinha98/debian . -no-cache=true
+- chain to change the first instruction or specify no cache
+
+- docker uses "latest" when no tag is provided
+- images tagged "latest" will not be updated automatically when newwer version of the image is pushed to the repository
+- avoid using "latest" tag
+
+#### $ docker images
+#### $ docker tag [IMAGE_ID] arushisinha98/debian:1.01
+#### $ docker images
+#### $ docker login --username=arushisinha98
+#### [ENTER PASSWORD]
+#### $ docker push arushisinha98/debian:1.01
+
+##### Task 7: Containerize a hello world web application
+- Flask is a lightweight web framework
+- download and install git
+
+#### $ git clone -b v0.1 https://github.com/jleetutorial/dockerapp.git
+#### $ wsl ls
+#### $ cd dockerapp
+#### $ wsl ls
+#### $ cd app/
+#### $ wsl ls
+#### $ wsl vi app.py
+
+#### from flask import Flask
+#### app = Flask(__name__)
+#### # import Flask, initialize Flask, create app object
+#### @app.route('/')
