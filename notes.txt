@@ -151,7 +151,7 @@ Dockerfile syntax and best practices
 - each time docker executes an instruction, it builds a new image layer
 - if instruction unchanged, it uses docker cache to expedite
 
-#### $ docker build -t arushisinha98/debian . -no-cache=true
+#### $ docker build -t arushisinha98/debian . --no-cache=true
 - chain to change the first instruction or specify no cache
 
 - docker uses "latest" when no tag is provided
