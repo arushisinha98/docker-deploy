@@ -228,6 +228,8 @@ https://localhost:5000
 
 https://localhost:5000
 
+##### Task 8: Linking containers
+
 Redis is an in-memory data structure store
 - used as a database, cache, message broker
 - built-in replication and different levels of on-disk persistence
@@ -289,3 +291,206 @@ CMD ["python", "app.py"]
 
 start redis container >> start dockerapp container >> link redis container
 - this process is impractical as the number of containers grows
+
+##### Task 9: Docker compose
+Docker compose is a tool for defining and running multiple docker applications
+docker-compose.yml file to start all the containers
+- stores configuration of all the containers
+- removes burden to maintain scripts for docker orchestration
+
+#### $ docker-compose version
+#### $ cd dockerapp
+#### $ wsl ls
+#### $ wsl touch docker-compose.yml
+#### $ subl .
+
+Contents of docker-compose.yml file:
+version: '3'
+services:
+  dockerapp:
+    build: . # path to the Dockerfile ("." = current directory)
+    ports:
+    - "5000:5000"
+    depends_on:
+    - redis # dockerapp is a client of the redis container
+  redis:
+    image: redis:3.2.0
+# container linking not required in this version
+
+#### $ docker ps
+#### $ docker stop [CONTAINER_ID1 CONTAINER_ID2 ...]
+#### $ docker-compose up
+
+#### $ cd dockerapp
+#### $ git stash && git checkout v0.4
+
+Other docker-compose commands:
+#### $ docker-compose up (starts up all the containers)
+#### $ docker-compose up -d (to run in the background)
+#### $ docker-compose ps (outputs status of containers managed by docker-compose)
+#### $ docker-compose logs [-f] (outputs colored and aggregated logs for the compose-managed containers; -f outputs appended logs when the logs grow)
+#### $ docker-compose logs dockerapp (outputs logs of a specific container, dockerapp in this case)
+#### $ docker-compose stop (stops all the running containers w/o removing them)
+#### $ docker-compose rm [y/N] (removes all containers)
+#### $ docker-compose build (rebuilds all the images)
+
+#### $ wsl vi Dockerfile
+(change user to James)
+#### $ docker-compose up
+#### $ docker ps
+#### $ docker exec -it [CONTAINER_ID] bash
+(logs in as admin, not James)
+#### $ # exit
+#### $ cd dockerapp
+#### $ docker-compose build
+(rebuilds image)
+#### $ docker-compose up
+#### $ docker ps
+#### $ docker exec -it [CONTAINER_ID] bash
+(logs in as James)
+
+Best practices:
+Each container should have only one specific targeted process
+- easy to scale
+- better reusability
+- easy to troubleshoot
+Save data on volumes
+- safely shared among multiple containers
+- does not increase the size of the container
+- data exists outside the life cycle of a given container
+Use names or environment variables to pass information b/w containers
+- IP address changes when containers start and stop
+Run as normal user, not privileged
+Keep containers small
+
+##### Task 10: Docker container networking
+Container A + Container B <==> Bridge (docker0) -- host <==> internet
+
+Closed network (none network)
+- no access to outside world
+- isolated containers
+- maximum level of network protection
+- not a good choice if internet connection is required
+
+Bridge network
+- containers have access to loopback and private interface
+- all containers in the same bridge network can communicate w/ each other
+- containers from different bridge networks cannot connect w/ each other by default
+- reduces level of network isolation in favor of better outside connectivity
+- most suitable where you want to set up a relatively small network on a single host
+
+Host network
+- least protected network model
+- adds a container on the host's network stack
+- containers deployed on the host stack have full access to host's interface (open containers)
+- no isolation, leaving containers widely unprotected
+- containers running in host network stack see higher level of performance than those traversing the docker0 bridge and iptables port mappings
+
+Overlay network
+- supports multi-host networking out of the box
+- require some pre-existing conditions before it can be created
+	running docker engine in swarm mode (Google: create a swarm cluster)
+	a key-valye store such as consul
+- widely used in production
+
+#### $ docker network ls
+#### $ docker run -d --net none busybox sleep 1000
+#### $ docker exec -it [LONG_CONTAINER_ID] /bin/ash
+#### /# ping 8.8.8.8
+(Google IP unreachable)
+#### /# ifconfig
+#### /# exit
+#### $ ping 8.8.8.8
+(Google IP reachable)
+
+#### $ docker network inspect bridge
+(IP range for bridge network: 172.17.0.0 - 172.17.255.255)
+#### $ docker run -d --name container_1 busybox sleep 1000
+#### $ docker exec -it container_1 ifconfig
+#### $ docker run -d --name container_2 busybox sleep 1000
+#### $ docker exec -it container_2 ifconfig
+#### $ docker exec -it container_1 ping [IP_FROM_ABOVE]
+(can ping each other via private IP interfaces of each other)
+#### $ docker exec -it container_1 ping 8.8.8.8
+
+#### $ docker network create --driver bridge my_bridge
+#### $ docker network ls
+#### $ docker network inspect my_bridge
+#### $ docker run -d --name container_3 --net my_bridge busybox sleep 1000
+#### $ docker exec -it container_3 ifconfig
+#### $ docker exec -it container_3 ping [IP_OF_CONTAINER_1]
+
+#### $ docker network connect bridge container_3
+#### $ docker exec -it container_3 ifconfig
+(now able to ping container_1)
+#### $ docker network disconnect bridge container_3
+
+#### $ docker run -d --name container_4 --net host busybox sleep 1000
+#### $ docker exec -it container_4 ifconfig
+
+##### Task 11: Define container networks with docker compose
+
+#### $ git stash && git checkout v0.4
+#### $ docker-compose up
+#### $ docker network ls
+#### $ docker-compose down
+
+Make edits to docker-compose.yml:
+version: '3'
+services:
+  dockerapp:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    networks:
+      - my_net
+  redis:
+    image: redis:3.2.0
+    networks:
+      - my_net
+networks:
+  my_net:
+    driver: bridge
+    
+#### $ docker-compose up
+
+More complex network isolation:
+
+docker-compose.yml
+version: '2'
+services:
+  proxy:
+    build: ./proxy
+    networks:
+      - front
+  app:
+    build: ./app
+    networks:
+      - front
+      - back
+  db:
+    image: postgres
+    networks:
+      - back
+networks:
+  front:
+    # use a custom driver
+    driver: custom-driver-1
+  back:
+    # use a custom driver which takes special options
+    driver: custom-driver-2
+    driver_opts:
+      foo: "1"
+      bar: "2"
+
+##### Task 12: Writing unit tests for app and running them inside a container
+- unit tests should test basic functionality of dockerapp code w/o reliance on external services
+- unit tests should run quickly so that developers can iterate quickly w/o waiting for results
+- docker containers can spin up in seconds and can createa a clean and isolated environment to run unit tests
+
+Python unit testing framework: unittest
+------------------------------------------------------------------------------------------
+wsl.exe --shutdown
+wsl.exe
