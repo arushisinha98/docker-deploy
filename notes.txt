@@ -79,8 +79,8 @@ Multiple layers can share access to the same underlying image
 - view https://localhost:8888
 #### $ docker ps -a
 #### $ docker run -it -dp 8888:8080 tomcat:8.0
-#### $ docker run -itdp 8888:8080 --name hello_world tomcat:8.0
-#### $ docker logs [IMAGE_ID]
+#### $ docker run -itdp 8888:8080 --name hello_world2 tomcat:8.0
+#### $ docker logs [LONG_CONTAINER_ID]
 
 #### $ docker history busybox:1.24
 
@@ -95,7 +95,7 @@ Multiple layers can share access to the same underlying image
 #### $ # git
 #### $ # exit
 #### $ docker ps -a
-#### $ docker commit [IMAGE_ID] arushisinha98/debian:1.00
+#### $ docker commit [CONTAINER_ID] arushisinha98/debian:1.00
 #### $ docker images
 #### $ docker run -it arushisinha98/debian:1.00
 #### $ # ls
@@ -144,10 +144,7 @@ Dockerfile syntax and best practices
 #### CMD ["echo", "hello world"]
 
 #### $ docker build -t arushisinha98/debian .
-#### $ docker run -it [IMAGE_ID]
-#### $ # ls
-#### $ # cd src
-#### $ src# ls
+#### $ docker run -it arushisinha98/debian
 #### $ docker run [IMAGE_ID] echo "hello docker"
 - overwrites CMD instruction
 
