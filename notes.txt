@@ -173,7 +173,7 @@ Dockerfile syntax and best practices
 #### $ wsl ls
 #### $ cd dockerapp
 #### $ wsl ls
-#### $ cd app/
+#### $ cd app
 #### $ wsl ls
 #### $ wsl vi app.py
 
@@ -194,12 +194,12 @@ Dockerfile syntax and best practices
 - using app server at 0.0.0.0 instead of local host or 127.0.0.1
 - needed if you want to have server available externally (app server can be accessed by other containers)
 
-#### $ cd
-#### $ wsl vi Dockerfil
+#### $ cd ..
+#### $ wsl vi Dockerfile
 
 #### FROM python-3.5
-#### RUN pip install Flask=0.11.1
-#### RUN useradd -ms /bin/bash/admin
+#### RUN pip install Flask==0.11.1
+#### RUN useradd -ms /bin/bash admin
 #### USER admin
 #### WORKDIR /app
 #### COPY app /app
