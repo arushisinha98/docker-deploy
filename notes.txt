@@ -219,3 +219,73 @@ https://localhost:5000
 #### $ $ cd/home/admin/
 #### $ $ ps axu
 #### $ $ exit
+
+#### $ git stash && git checkout v0.2
+#### $ subl .
+- open Sublime Text (download & install beforehand)
+#### $ docker build -t dockerapp:v0.2 .
+#### $ docker run -dp 5000:5000 dockerapp:v0.2
+
+https://localhost:5000
+
+Redis is an in-memory data structure store
+- used as a database, cache, message broker
+- built-in replication and different levels of on-disk persistence
+
+Link redis and dockerapp containers
+- dockerapp is the source >> redis is the receiver
+Docker container links
+- when we build an app with a microservice architecture, we are able to run many indepenent components in different containers
+- docker creates a secure tunnel b/w containers that doesn't need to expose any ports externally on the container
+
+Make edits to app.py:
+from flask import Flask, request, render_template
+import redis
+
+app = Flask(__name__)
+default_key = '1'
+cache = redis.StrictRedis(host = 'redis', port = 6379, db = 0)
+cache.set(default_key, "one")
+
+@app.route('/', methods=['GET', 'POST'])
+def mainpage():
+
+	key = default_key
+	if 'key' in request.form:
+	    key = request.form['key']
+
+	if request.method == 'POST' and request.form['submit'] == 'save':
+		cache.set(key, request.form['cache_value'])
+
+	cache_value = None;
+	if cache.get(key):
+		cache_value = cache.get(key).decode('utf-8')
+
+	return render_template('index.html', key = key, cache_value = cache_value)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0')
+
+Make edits to Dockerfile:
+FROM python:3.5
+RUN pip install Flask==0.11.1 redis==2.10.5
+RUN useradd -ms /bin/bash admin
+USER admin
+WORKDIR /app
+COPY app /app
+CMD ["python", "app.py"]
+
+#### $ docker run -d --name redis redis:3.2.0
+#### $ docker ps
+#### $ docker build -t dockerapp:v0.3 .
+#### $ docker run -dp 5000:5000 --link redis dockerapp:v0.3
+#### $ docker ps
+#### $ docker exec -it [CONTAINER_ID] bash
+#### $ $ more /etc/hosts
+#### $ $ exit
+#### $ docker inpsect [CONTAINER_ID] | wsl grep IP
+#### $ docker exec -it [CONTAINER_ID] bash
+#### $ $ ping redis
+
+start redis container >> start dockerapp container >> link redis container
+- this process is impractical as the number of containers grows
