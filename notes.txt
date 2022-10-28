@@ -491,6 +491,43 @@ networks:
 - docker containers can spin up in seconds and can createa a clean and isolated environment to run unit tests
 
 Python unit testing framework: unittest
+
+##### Task 13: Continuous integration
+Continuous integration = software engineering practice in which isolated changes are immediately tested and report when added to larger code base
+- goal is to provide rapid feedback
+- defect can be identified and corrected ASAP
+
+- developer ==> commit changes to central repository
+- continuous integration monitors central repository
+- triggers a build (process varies but involves building app and running unit test)
+- assign build label to the code that was built
+- can be configured to deploy the app in production server
+
+- CI server pushes image to docker registry
+- pull docker images
+- development environment
+
+Github as central repository for version control
+Circle CI is a hosted CI server
+
+- fork https://github.com/jleetutorial/dockerapp
+set up SSH keys for Github
+- SSH keys are a way to identify trusted computers w/o password
+- generate SSH key pair and save private SSH key in local box
+- add public key to Github account
+- directly push changes to Github repository
+SSH public key file sits under ~/.ssh/ directory and ends with .pub
+
+#### $ ssh-keygen -t rsa -b 4096 -C "arushi_sinha@tech.gov.sg"
+[ENTER]
+no passphrase [ENTER] x 2
+Start >> windows administrative tools >> computer management >> services and applications >> services >> OpenSSH authentication agent
+Startup type = Manual >> apply >> OK
+#### $ eval "$(ssh-agent -s)" (start SSH agent then add key to agent)
+#### $ ssh-add ~/.ssh/id_rsa
+#### $ pbcopy < ~./ssh/id_rsa.pub (now can add to Github)
+
+Github profile >> settings >> new SSH key >> give a title >> paste public key >> add
 ------------------------------------------------------------------------------------------
 wsl.exe --shutdown
 wsl.exe
