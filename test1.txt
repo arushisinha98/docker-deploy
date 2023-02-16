@@ -1,0 +1,15 @@
+Docker Basics Challenge
+https://cloudacademy.com/lab-challenge/docker-basics-challenge/
+
+Open AWS Management Console
+Navigate to EC2 console (instances panel)
+Right-click docker instance and connect
+Select EC2 Instance Connect (browser-based SSH connection)
+Enter ec2-user as username
+Connect
+
+Find the name of the file in container pine /tmp directory and create a file with the same name in Docker host's /home/ec2-user directory
+Run container based on nginx image with tage 1.19.0; name container web and run in background; ensure it is accessible on TCP port 888 of Docker host (port 80 default)
+Use a Dockerfile to create an image on Docker host named myapp with tag 0.0.1; use busybox image with tab 1.31.1 as starting point
+configure image to use nc -lv -p 5000 as default command
+createa a new tag for alpine Linux image called Challenge
