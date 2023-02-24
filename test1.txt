@@ -1,33 +1,26 @@
 Docker Basics Challenge
 https://cloudacademy.com/lab-challenge/docker-basics-challenge/
 
-330227062054
-student
-Ca1_bSkL00BD
+1. Find the name of a file in a container and copy locally
+$ docker exec pine ls /tmp
+$ docker cp pine:/tmp/d0ck3r /home/ec2-user/
 
-Open AWS Management Console
-Navigate to EC2 console (instances panel)
-Right-click docker instance and connect
-Select EC2 Instance Connect (browser-based SSH connection)
-Enter ec2-user as username
-Connect
+2. Run nginx web server container
+$ docker run -d --name web -p 8888:80 nginx:1.19.0
 
-Add a custom tage to an image:
-$ docker tag [IMAGE]:[ORIGINAL_TAG] [IMAGE]:[CUSTOM_TAG]
-e.g. $ docker tag alpine:3.12.0 alpine:challenge
-
-Create an image using a Dockerfile:
+3. Create an image using Dockerfile
 $ touch Dockerfile
 $ vi Dockerfile
 # FROM busybox:1.31.1
 # MAINTAINER My Name = "ec2-user"
+# CMD ["nc","-lv","-p"]
 # EXPOSE 5000
 <esc> :w :q
 
-$ docker build ./ ## needs to be in directory with Dockerfile
-$ docker run -lv -p 5000:5000 [IMAGE_ID]
-$ docker tag [IMAGE_ID] myapp:0.0.1
+$ docker build -t myapp:0.0.1 ## needs to be in directory with Dockerfile
 
-Run nginx web server container
+4. Create a new tag for an image
+$ docker images
+$ docker tag alpine:3.12.0 alpine:challenge
 
-Find the name of a file in a container and copy locally
+Knowledge check: containers in the bridge network CAN access the internet
